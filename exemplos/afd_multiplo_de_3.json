@@ -1,0 +1,12 @@
+{
+  "nome": "AFD — binário múltiplo de 3",
+  "estados": ["r0", "r1", "r2"],
+  "alfabeto": ["0", "1"],
+  "transicoes": {
+    "r0": { "0": ["r0"], "1": ["r1"] },
+    "r1": { "0": ["r2"], "1": ["r0"] },
+    "r2": { "0": ["r1"], "1": ["r2"] }
+  },
+  "estadoInicial": "r0",
+  "estadosFinais": ["r0"]
+}

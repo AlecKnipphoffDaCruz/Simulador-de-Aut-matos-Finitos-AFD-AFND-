@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador de Autômatos Finitos (AFD / AFND)</title>
+<meta name="description" content="Simulador gráfico de autômatos finitos determinísticos e não determinísticos, com execução passo a passo. Trabalho de Computabilidade.">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+<header>
+  <div class="topo">
+    <div>
+      <h1>Simulador de Autômatos Finitos (AFD / AFND)</h1>
+      <p>Computabilidade — carregue um autômato em JSON, digite uma palavra e acompanhe o caminho passo a passo.</p>
+    </div>
+    <nav class="abas" role="tablist" aria-label="Seções">
+      <button role="tab" id="tab-simulador" data-aba="simulador" aria-selected="true">Simulador</button>
+      <button role="tab" id="tab-codigo" data-aba="codigo" aria-selected="false">Código</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ===================== ABA: SIMULADOR ===================== -->
+<main id="aba-simulador" role="tabpanel" aria-labelledby="tab-simulador">
+  <div class="coluna">
+    <section class="card">
+      <h2>Autômato</h2>
+      <div id="definicao"></div>
+      <svg id="grafo" role="img" aria-label="Desenho do autômato"></svg>
+    </section>
+
+    <section class="card">
+      <h2>Execução</h2>
+      <div class="linha">
+        <label for="palavra">Palavra de entrada:</label>
+        <input type="text" id="palavra" value="" autocomplete="off" spellcheck="false" placeholder="ex.: 1001">
+      </div>
+      <div id="fita"></div>
+      <div class="controles">
+        <button id="btn-reiniciar">⟲ Reiniciar</button>
+        <button id="btn-voltar">◀ Voltar</button>
+        <button id="btn-passo" class="primario">Passo ▶</button>
+        <button id="btn-auto">▶ Executar</button>
+        <label for="velocidade" style="font-size:13px;color:var(--suave)">Velocidade:</label>
+        <select id="velocidade">
+          <option value="1400">Lenta</option>
+          <option value="800" selected>Normal</option>
+          <option value="350">Rápida</option>
+        </select>
+      </div>
+      <div id="descricao"></div>
+      <div id="resultado" class="resultado"></div>
+    </section>
+  </div>
+
+  <div class="coluna">
+    <section class="card">
+      <h2>Especificação (JSON)</h2>
+      <div class="linha">
+        <select id="exemplo" aria-label="Exemplos"></select>
+        <input type="file" id="arquivo" accept=".json,.txt,application/json,text/plain">
+      </div>
+      <textarea id="json" spellcheck="false"></textarea>
+      <div class="linha" style="margin-top:8px"><button id="btn-carregar" class="primario">Carregar autômato</button></div>
+      <div id="erros" hidden></div>
+      <div class="dica">Transição vazia: use a chave <code>"ε"</code> (ou <code>"eps"</code>).</div>
+    </section>
+
+    <section class="card">
+      <h2>Tabela de transições (δ)</h2>
+      <table id="tabela"></table>
+      <div class="dica">→ estado inicial &nbsp; * estado final</div>
+    </section>
+
+    <section class="card">
+      <h2>Caminho percorrido</h2>
+      <div class="rolagem">
+        <table><thead><tr><th>Passo</th><th>Lido</th><th>Estados ativos</th></tr></thead><tbody id="log"></tbody></table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ===================== ABA: CÓDIGO ===================== -->
+<div id="aba-codigo" class="codigo" role="tabpanel" aria-labelledby="tab-codigo" hidden>
+  <section class="card intro">
+    <h2>Como o simulador funciona por dentro</h2>
+    <p>O programa foi dividido em partes independentes: o <b>núcleo</b> só cuida da lógica do autômato (não sabe nada de tela), e a <b>interface</b> só desenha o que o núcleo devolve. Abaixo estão os trechos mais importantes, tirados do código real.</p>
+    <div class="mapa">
+      <div class="item"><span class="arq">js/automato.js</span><span>Núcleo: valida o JSON e simula a palavra.</span></div>
+      <div class="item"><span class="arq">js/app.js</span><span>Interface: desenho em SVG, fita, botões.</span></div>
+      <div class="item"><span class="arq">exemplos/*.json</span><span>Autômatos de exemplo.</span></div>
+      <div class="item"><span class="arq">tools/test.js</span><span>239 testes automáticos.</span></div>
+    </div>
+  </section>
+
+  <div id="trechos"></div>
+
+  <section class="card">
+    <h2>O formato do arquivo JSON</h2>
+    <p class="expl">Cada campo corresponde a uma das cinco partes de um autômato: <code>estados</code> (Q), <code>alfabeto</code> (Σ), <code>transicoes</code> (δ), <code>estadoInicial</code> (q₀) e <code>estadosFinais</code> (F). A transição vazia usa a chave <code>"ε"</code>.</p>
+    <div class="bloco"><button class="copiar" data-alvo="json-exemplo">Copiar</button><pre><code id="json-exemplo"></code></pre></div>
+    <div class="baixar" id="baixar"></div>
+  </section>
+
+  <section class="card">
+    <h2>Testes automáticos</h2>
+    <p class="expl">O arquivo <code>tools/test.js</code> roda 239 verificações, incluindo o AFD de múltiplo de 3 conferido contra a conta real (<code>n % 3</code>) para todos os números de 0 a 200, o AFND, a transição ε, a palavra vazia e os arquivos inválidos.</p>
+    <div class="bloco"><pre><code><span class="c"># no terminal, dentro da pasta do projeto</span>
+node tools/test.js
+
+<span class="c"># ...</span>
+Todos os testes passaram.</code></pre></div>
+  </section>
+</div>
+
+<script src="js/automato.js"></script>
+<script src="js/exemplos.js"></script>
+<script src="js/trechos.js"></script>
+<script src="js/app.js"></script>
+<script src="js/codigo.js"></script>
+</body>
+</html>

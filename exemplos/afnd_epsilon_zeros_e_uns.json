@@ -1,0 +1,11 @@
+{
+  "nome": "AFND com ε — zeros seguidos de uns (0*1*)",
+  "estados": ["q0", "q1"],
+  "alfabeto": ["0", "1"],
+  "transicoes": {
+    "q0": { "0": ["q0"], "ε": ["q1"] },
+    "q1": { "1": ["q1"] }
+  },
+  "estadoInicial": "q0",
+  "estadosFinais": ["q1"]
+}
