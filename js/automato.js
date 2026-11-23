@@ -1,23 +1,17 @@
 /**
- * automato.js — núcleo do simulador (sem nenhuma dependência de tela).
+ * automato.js — núcleo do simulador de AFD (sem nenhuma dependência de tela).
  *
  * Responsabilidades:
- *   1. validar()  -> confere se a especificação (JSON) é um autômato válido
+ *   1. validar()  -> confere se a especificação (JSON) é um AFD válido
  *   2. simular()  -> processa uma palavra e devolve TODOS os passos
  *
- * Funciona em AFD, AFND e AFND com transições vazias (ε).
- * A ideia é a mesma para os três: em cada passo guardamos o CONJUNTO de
- * estados em que o autômato pode estar. Num AFD esse conjunto sempre tem
- * 1 estado; num AFND pode ter vários.
+ * A ideia é simples: o autômato está sempre em UM estado. A cada símbolo
+ * lido, a tabela de transições diz qual é o próximo estado.
  */
 (function (raiz, fabrica) {
   if (typeof module === 'object' && module.exports) module.exports = fabrica();
   else raiz.Automato = fabrica();
 })(this, function () {
-  const EPS = 'ε';
-  // Formas aceitas no JSON para escrever a transição vazia
-  const APELIDOS_EPS = ['ε', 'eps', 'epsilon', 'λ', ''];
-
   /** Converte texto JSON em objeto, sem estourar exceção. */
   function lerJSON(texto) {
     if (typeof texto !== 'string' || texto.trim() === '') {
@@ -31,7 +25,6 @@
   }
 
   const ehTexto = (x) => typeof x === 'string';
-  const emArray = (x) => (Array.isArray(x) ? x : [x]);
 
   /**
    * Valida a especificação e devolve { erros: [...], automato }.
@@ -50,7 +43,7 @@
     if (!Array.isArray(alfabeto) || alfabeto.length === 0)
       erros.push('"alfabeto" deve ser uma lista não vazia.');
     if (transicoes === null || typeof transicoes !== 'object' || Array.isArray(transicoes))
-      erros.push('"transicoes" deve ser um objeto: { estado: { símbolo: [destinos] } }.');
+      erros.push('"transicoes" deve ser um objeto: { estado: { símbolo: destino } }.');
     if (!ehTexto(estadoInicial) || estadoInicial === '')
       erros.push('"estadoInicial" deve ser um texto (nome de um estado).');
     if (!Array.isArray(estadosFinais))
@@ -67,8 +60,6 @@
       erros.push('Cada símbolo do alfabeto deve ser um único caractere.');
     if (new Set(alfabeto).size !== alfabeto.length)
       erros.push('Há símbolos repetidos em "alfabeto".');
-    if (alfabeto.some((s) => APELIDOS_EPS.includes(s)))
-      erros.push('A transição vazia (ε) não pode fazer parte do alfabeto.');
     if (erros.length) return { erros, automato: null };
 
     const conjuntoEstados = new Set(estados);
@@ -82,8 +73,6 @@
     // --- transições ------------------------------------------------------
     const delta = {};
     estados.forEach((e) => (delta[e] = {}));
-    let temEps = false;
-    let naoDeterministico = false;
 
     Object.keys(transicoes).forEach((origem) => {
       if (!conjuntoEstados.has(origem)) {
@@ -92,35 +81,28 @@
       }
       const porSimbolo = transicoes[origem];
       if (porSimbolo === null || typeof porSimbolo !== 'object' || Array.isArray(porSimbolo)) {
-        erros.push(`As transições de "${origem}" devem ser um objeto { símbolo: [destinos] }.`);
+        erros.push(`As transições de "${origem}" devem ser um objeto { símbolo: destino }.`);
         return;
       }
-      Object.keys(porSimbolo).forEach((chave) => {
-        const ehEps = APELIDOS_EPS.includes(chave);
-        const simbolo = ehEps ? EPS : chave;
-        if (!ehEps && !alfabeto.includes(chave)) {
-          erros.push(`Transição de "${origem}" usa o símbolo "${chave}", que não está no alfabeto.`);
+      Object.keys(porSimbolo).forEach((simbolo) => {
+        if (!alfabeto.includes(simbolo)) {
+          erros.push(`Transição de "${origem}" usa o símbolo "${simbolo}", que não está no alfabeto.`);
           return;
         }
-        const destinos = emArray(porSimbolo[chave]);
-        const unicos = [];
-        destinos.forEach((d) => {
-          if (!ehTexto(d) || !conjuntoEstados.has(d)) {
-            erros.push(`Transição ("${origem}", "${chave}") vai para "${d}", que não existe em "estados".`);
-          } else if (!unicos.includes(d)) unicos.push(d);
-        });
-        if (ehEps) temEps = true;
-        if (unicos.length > 1) naoDeterministico = true;
-        delta[origem][simbolo] = unicos;
+        const destino = porSimbolo[simbolo];
+        if (!ehTexto(destino)) {
+          erros.push(`Transição ("${origem}", "${simbolo}") deve ter um único destino (um texto), mas recebeu ${JSON.stringify(destino)}.`);
+        } else if (!conjuntoEstados.has(destino)) {
+          erros.push(`Transição ("${origem}", "${simbolo}") vai para "${destino}", que não existe em "estados".`);
+        } else {
+          delta[origem][simbolo] = destino;
+        }
       });
     });
     if (erros.length) return { erros, automato: null };
 
-    const tipo = temEps || naoDeterministico ? 'AFND' : 'AFD';
-    // AFD "incompleto": falta alguma transição (a palavra é rejeitada se travar)
-    const incompleto =
-      tipo === 'AFD' &&
-      estados.some((e) => alfabeto.some((s) => !(delta[e][s] && delta[e][s].length)));
+    // AFD "parcial": falta alguma transição (a palavra é rejeitada se travar)
+    const incompleto = estados.some((e) => alfabeto.some((s) => delta[e][s] === undefined));
 
     return {
       erros: [],
@@ -131,8 +113,6 @@
         delta,
         inicial: estadoInicial,
         finais: [...new Set(estadosFinais)],
-        tipo,
-        temEps,
         incompleto,
       },
     };
@@ -143,69 +123,27 @@
     const arestas = [];
     auto.estados.forEach((de) =>
       Object.keys(auto.delta[de]).forEach((simbolo) =>
-        auto.delta[de][simbolo].forEach((para) => arestas.push({ de, simbolo, para }))
+        arestas.push({ de, simbolo, para: auto.delta[de][simbolo] })
       )
     );
     return arestas;
   }
 
-  /** Fecho-ε: todos os estados alcançáveis só com transições vazias. */
-  function fechoEps(auto, inicio) {
-    const conjunto = new Set(inicio);
-    const arestas = [];
-    const fila = [...inicio];
-    while (fila.length) {
-      const e = fila.shift();
-      (auto.delta[e][EPS] || []).forEach((p) => {
-        arestas.push({ de: e, simbolo: EPS, para: p });
-        if (!conjunto.has(p)) {
-          conjunto.add(p);
-          fila.push(p);
-        }
-      });
-    }
-    return { conjunto, arestas };
-  }
-
-  /** Lê UM símbolo a partir de um conjunto de estados. */
-  function mover(auto, conjunto, simbolo) {
-    const destinos = new Set();
-    const arestas = [];
-    conjunto.forEach((e) =>
-      (auto.delta[e][simbolo] || []).forEach((p) => {
-        destinos.add(p);
-        arestas.push({ de: e, simbolo, para: p });
-      })
-    );
-    const fecho = fechoEps(auto, [...destinos]);
-    return { conjunto: fecho.conjunto, arestas: arestas.concat(fecho.arestas) };
-  }
-
-  const ordenar = (conj, auto) => auto.estados.filter((e) => conj.has(e));
-  const fmt = (lista) => '{' + lista.join(', ') + '}';
-
   /**
    * Simula a palavra. Retorna:
    *   { aceita, motivo, erro, passos }
-   * Cada passo: { n, lido, estados, arestas, texto }
-   *   n       = quantos símbolos já foram lidos
-   *   lido    = símbolo lido neste passo (null no passo 0)
-   *   estados = conjunto de estados ativos DEPOIS do passo
-   *   arestas = transições usadas neste passo (para destacar no desenho)
+   * Cada passo: { n, lido, estado, aresta, texto }
+   *   n      = quantos símbolos já foram lidos
+   *   lido   = símbolo lido neste passo (null no passo 0)
+   *   estado = estado em que o autômato está DEPOIS do passo (null se travou)
+   *   aresta = transição usada neste passo (para destacar no desenho)
    */
   function simular(auto, palavra) {
-    const passos = [];
     const simbolos = [...palavra];
-
-    let atual = fechoEps(auto, [auto.inicial]);
-    passos.push({
-      n: 0,
-      lido: null,
-      estados: ordenar(atual.conjunto, auto),
-      arestas: atual.arestas,
-      texto: `Início em ${fmt(ordenar(atual.conjunto, auto))}` +
-        (atual.arestas.length ? ' (já contando as transições ε)' : ''),
-    });
+    let estado = auto.inicial;
+    const passos = [
+      { n: 0, lido: null, estado, aresta: null, texto: `Início em ${estado}` },
+    ];
 
     for (let i = 0; i < simbolos.length; i++) {
       const c = simbolos[i];
@@ -217,35 +155,34 @@
           passos,
         };
       }
-      const antes = ordenar(atual.conjunto, auto);
-      atual = mover(auto, atual.conjunto, c);
-      const depois = ordenar(atual.conjunto, auto);
-      passos.push({
-        n: i + 1,
-        lido: c,
-        estados: depois,
-        arestas: atual.arestas,
-        texto: `Leu "${c}": ${fmt(antes)} → ${depois.length ? fmt(depois) : '{ } (nenhum estado)'}`,
-      });
-      if (depois.length === 0) {
+      const proximo = auto.delta[estado][c];
+      if (proximo === undefined) {
+        passos.push({ n: i + 1, lido: c, estado: null, aresta: null, texto: `Leu "${c}" em ${estado}: não existe transição` });
         return {
           aceita: false,
           motivo: 'O autômato travou: não existe transição para o símbolo lido.',
           passos,
         };
       }
+      passos.push({
+        n: i + 1,
+        lido: c,
+        estado: proximo,
+        aresta: { de: estado, simbolo: c, para: proximo },
+        texto: `Leu "${c}": ${estado} → ${proximo}`,
+      });
+      estado = proximo;
     }
 
-    const finais = ordenar(atual.conjunto, auto).filter((e) => auto.finais.includes(e));
-    const aceita = finais.length > 0;
+    const aceita = auto.finais.includes(estado);
     return {
       aceita,
       motivo: aceita
-        ? `Terminou em estado final: ${fmt(finais)}.`
-        : `Terminou em ${fmt(ordenar(atual.conjunto, auto))}, que não contém estado final.`,
+        ? `Terminou em ${estado}, que é estado final.`
+        : `Terminou em ${estado}, que não é estado final.`,
       passos,
     };
   }
 
-  return { EPS, lerJSON, validar, simular, listarArestas, fechoEps };
+  return { lerJSON, validar, simular, listarArestas };
 });

@@ -30,7 +30,7 @@ if (validado.erros.length) {
 }
 
 const auto = validado.automato;
-console.log(`${auto.nome}  [${auto.tipo}]`);
+console.log(`${auto.nome}  [AFD${auto.incompleto ? ' parcial' : ''}]`);
 console.log(`Palavra: "${palavra}"\n`);
 const r = Automato.simular(auto, palavra);
 r.passos.forEach((p) => console.log(`  passo ${p.n}: ${p.texto}`));

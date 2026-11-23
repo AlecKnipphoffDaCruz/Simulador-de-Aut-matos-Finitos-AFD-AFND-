@@ -16,8 +16,7 @@ const ler = (...p) => fs.readFileSync(path.join(raiz, ...p), 'utf8');
 // ---------- 1) exemplos ----------
 const casos = {
   'afd_multiplo_de_3.json': ['AFD — binário múltiplo de 3', '1001'],
-  'afnd_termina_em_01.json': ['AFND — termina em 01', '1101'],
-  'afnd_epsilon_zeros_e_uns.json': ['AFND com ε — 0*1*', '0011'],
+  'afd_catraca.json': ['AFD — catraca (m = moeda, e = empurrar)', 'mem'],
   'invalido_estado_inexistente.json': ['⚠ Arquivo com erro (teste de validação)', 'ab'],
 };
 const exemplos = {};
@@ -71,32 +70,16 @@ const trechos = [
     id: 'validacao',
     titulo: 'Validando as transições',
     arquivo: 'js/automato.js · validar()',
-    oque: 'Percorre cada transição do JSON e confere se o estado de origem, o símbolo e os destinos existem. Cada problema vira uma mensagem em português; nada é carregado se houver erro.',
-    ponto: 'É aqui que o simulador não quebra com arquivo malformado: ele acumula todos os erros e mostra de uma vez. Também detecta sozinho se o autômato é AFD ou AFND (mais de um destino ou transição ε).',
+    oque: 'Percorre cada transição do JSON e confere se o estado de origem, o símbolo e o destino existem, e se há um único destino. Cada problema vira uma mensagem em português; nada é carregado se houver erro.',
+    ponto: 'É aqui que o simulador não quebra com arquivo malformado: ele acumula todos os erros e mostra de uma vez, em vez de parar no primeiro.',
     codigo: intervalo('Object.keys(transicoes).forEach((origem) => {', 'if (erros.length) return { erros, automato: null };\n'.trim()),
-  },
-  {
-    id: 'fecho',
-    titulo: 'Fecho-ε: andar sem ler nada',
-    arquivo: 'js/automato.js · fechoEps()',
-    oque: 'Dado um conjunto de estados, devolve todos os que podem ser alcançados usando só transições vazias (ε). Usa uma fila: visita um estado, adiciona os vizinhos por ε e repete até não surgir nenhum novo.',
-    ponto: 'É isso que faz o AFND com ε funcionar. Num autômato sem ε, esta função simplesmente devolve o mesmo conjunto que recebeu.',
-    codigo: funcao('fechoEps'),
-  },
-  {
-    id: 'mover',
-    titulo: 'Ler um símbolo',
-    arquivo: 'js/automato.js · mover()',
-    oque: 'Para cada estado ativo, segue as transições do símbolo lido e junta todos os destinos num novo conjunto. No fim, aplica o fecho-ε. Também guarda as arestas usadas, para o desenho destacá-las.',
-    ponto: 'Num AFD cada estado tem no máximo um destino, então o conjunto continua com 1 elemento. Num AFND pode crescer. O código é o mesmo para os dois.',
-    codigo: funcao('mover'),
   },
   {
     id: 'simular',
     titulo: 'A simulação completa',
     arquivo: 'js/automato.js · simular()',
-    oque: 'Começa no fecho-ε do estado inicial, lê a palavra símbolo por símbolo chamando mover() e registra cada passo. Para se encontrar um símbolo fora do alfabeto ou se nenhum estado sobrar (a máquina travou).',
-    ponto: 'No fim, a palavra é aceita se algum estado ativo for final. A lista de passos devolvida é o que a tela usa para animar o caminho percorrido.',
+    oque: 'Começa no estado inicial e lê a palavra símbolo por símbolo. A cada símbolo, consulta a tabela de transições (delta) para descobrir o próximo estado e registra o passo. Para se encontrar um símbolo fora do alfabeto ou uma transição que não existe (a máquina travou).',
+    ponto: 'No fim, a palavra é aceita se o estado onde a máquina parou for final. A lista de passos devolvida é o que a tela usa para animar o caminho percorrido.',
     codigo: funcao('simular'),
   },
 ];

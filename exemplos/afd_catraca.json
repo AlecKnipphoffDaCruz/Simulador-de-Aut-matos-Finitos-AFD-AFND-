@@ -1,0 +1,11 @@
+{
+  "nome": "AFD — catraca (m = moeda, e = empurrar)",
+  "estados": ["Trancada", "Liberada"],
+  "alfabeto": ["m", "e"],
+  "transicoes": {
+    "Trancada": { "m": "Liberada", "e": "Trancada" },
+    "Liberada": { "m": "Liberada", "e": "Trancada" }
+  },
+  "estadoInicial": "Trancada",
+  "estadosFinais": ["Liberada"]
+}

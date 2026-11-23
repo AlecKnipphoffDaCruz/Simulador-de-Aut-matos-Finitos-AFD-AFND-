@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Simulador de Autômatos Finitos (AFD / AFND)</title>
-<meta name="description" content="Simulador gráfico de autômatos finitos determinísticos e não determinísticos, com execução passo a passo. Trabalho de Computabilidade.">
+<title>Simulador de Autômato Finito Determinístico (AFD)</title>
+<meta name="description" content="Simulador gráfico de autômato finito determinístico (AFD), com execução passo a passo. Trabalho de Computabilidade.">
 <link rel="stylesheet" href="css/estilo.css">
 </head>
 <body>
 <header>
   <div class="topo">
     <div>
-      <h1>Simulador de Autômatos Finitos (AFD / AFND)</h1>
+      <h1>Simulador de Autômato Finito Determinístico (AFD)</h1>
       <p>Computabilidade — carregue um autômato em JSON, digite uma palavra e acompanhe o caminho passo a passo.</p>
     </div>
     <nav class="abas" role="tablist" aria-label="Seções">
@@ -64,7 +64,7 @@
       <textarea id="json" spellcheck="false"></textarea>
       <div class="linha" style="margin-top:8px"><button id="btn-carregar" class="primario">Carregar autômato</button></div>
       <div id="erros" hidden></div>
-      <div class="dica">Transição vazia: use a chave <code>"ε"</code> (ou <code>"eps"</code>).</div>
+      <div class="dica">Em <code>transicoes</code>, cada símbolo leva a <b>um único</b> estado: <code>"r0": {"0": "r0", "1": "r1"}</code>.</div>
     </section>
 
     <section class="card">
@@ -76,7 +76,7 @@
     <section class="card">
       <h2>Caminho percorrido</h2>
       <div class="rolagem">
-        <table><thead><tr><th>Passo</th><th>Lido</th><th>Estados ativos</th></tr></thead><tbody id="log"></tbody></table>
+        <table><thead><tr><th>Passo</th><th>Lido</th><th>Estado</th></tr></thead><tbody id="log"></tbody></table>
       </div>
     </section>
   </div>
@@ -91,7 +91,7 @@
       <div class="item"><span class="arq">js/automato.js</span><span>Núcleo: valida o JSON e simula a palavra.</span></div>
       <div class="item"><span class="arq">js/app.js</span><span>Interface: desenho em SVG, fita, botões.</span></div>
       <div class="item"><span class="arq">exemplos/*.json</span><span>Autômatos de exemplo.</span></div>
-      <div class="item"><span class="arq">tools/test.js</span><span>239 testes automáticos.</span></div>
+      <div class="item"><span class="arq">tools/test.js</span><span>231 testes automáticos.</span></div>
     </div>
   </section>
 
@@ -99,14 +99,14 @@
 
   <section class="card">
     <h2>O formato do arquivo JSON</h2>
-    <p class="expl">Cada campo corresponde a uma das cinco partes de um autômato: <code>estados</code> (Q), <code>alfabeto</code> (Σ), <code>transicoes</code> (δ), <code>estadoInicial</code> (q₀) e <code>estadosFinais</code> (F). A transição vazia usa a chave <code>"ε"</code>.</p>
+    <p class="expl">Cada campo corresponde a uma das cinco partes de um autômato: <code>estados</code> (Q), <code>alfabeto</code> (Σ), <code>transicoes</code> (δ), <code>estadoInicial</code> (q₀) e <code>estadosFinais</code> (F). Em <code>transicoes</code>, cada símbolo leva a um único estado (texto, não lista).</p>
     <div class="bloco"><button class="copiar" data-alvo="json-exemplo">Copiar</button><pre><code id="json-exemplo"></code></pre></div>
     <div class="baixar" id="baixar"></div>
   </section>
 
   <section class="card">
     <h2>Testes automáticos</h2>
-    <p class="expl">O arquivo <code>tools/test.js</code> roda 239 verificações, incluindo o AFD de múltiplo de 3 conferido contra a conta real (<code>n % 3</code>) para todos os números de 0 a 200, o AFND, a transição ε, a palavra vazia e os arquivos inválidos.</p>
+    <p class="expl">O arquivo <code>tools/test.js</code> roda 231 verificações, incluindo o AFD de múltiplo de 3 conferido contra a conta real (<code>n % 3</code>) para todos os números de 0 a 200, a catraca, a palavra vazia, os símbolos inválidos, o AFD que trava e os arquivos inválidos.</p>
     <div class="bloco"><pre><code><span class="c"># no terminal, dentro da pasta do projeto</span>
 node tools/test.js
 

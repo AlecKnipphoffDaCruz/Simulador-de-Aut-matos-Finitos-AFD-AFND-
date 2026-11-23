@@ -3,8 +3,8 @@
   "estados": ["q0", "q1"],
   "alfabeto": ["a", "b"],
   "transicoes": {
-    "q0": { "a": ["q1"], "c": ["q0"] },
-    "q1": { "b": ["q9"] }
+    "q0": { "a": "q1", "c": "q0" },
+    "q1": { "b": "q9" }
   },
   "estadoInicial": "q0",
   "estadosFinais": ["q5"]

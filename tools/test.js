@@ -18,7 +18,7 @@ const aceita = (auto, w) => A.simular(auto, w).aceita;
 
 // ---------- AFD: binário múltiplo de 3 ----------
 const afd = carregar('afd_multiplo_de_3.json').automato;
-esperar('AFD detectado', afd.tipo, 'AFD');
+esperar('AFD completo (não é parcial)', afd.incompleto, false);
 for (let n = 0; n <= 200; n++) {
   esperar(`múltiplo de 3: ${n.toString(2)} (${n})`, aceita(afd, n.toString(2)), n % 3 === 0);
 }
@@ -26,19 +26,17 @@ esperar('AFD palavra vazia (0 é múltiplo de 3 → aceita)', aceita(afd, ''), t
 esperar('AFD símbolo inválido', A.simular(afd, '10x1').erro !== undefined, true);
 esperar('AFD símbolo inválido rejeita', aceita(afd, '10x1'), false);
 
-// ---------- AFND: termina em 01 ----------
-const afnd = carregar('afnd_termina_em_01.json').automato;
-esperar('AFND detectado', afnd.tipo, 'AFND');
-['01', '001', '1101', '0101'].forEach((w) => esperar(`termina em 01: ${w}`, aceita(afnd, w), true));
-['', '0', '1', '10', '011', '110'].forEach((w) => esperar(`NÃO termina em 01: "${w}"`, aceita(afnd, w), false));
-esperar('AFND passo mostra 2 estados', A.simular(afnd, '0').passos[1].estados, ['q0', 'q1']);
+// ---------- AFD: catraca (m = moeda, e = empurrar) ----------
+const catraca = carregar('afd_catraca.json').automato;
+['m', 'mm', 'em', 'memm', 'eem'].forEach((w) => esperar(`catraca termina liberada: "${w}"`, aceita(catraca, w), true));
+['', 'e', 'me', 'mee', 'emme'].forEach((w) => esperar(`catraca termina trancada: "${w}"`, aceita(catraca, w), false));
+esperar('catraca: caminho de "me"', A.simular(catraca, 'me').passos.map((p) => p.estado), ['Trancada', 'Liberada', 'Trancada']);
+esperar('catraca não é parcial', catraca.incompleto, false);
 
-// ---------- AFND com ε: 0*1* ----------
-const eps = carregar('afnd_epsilon_zeros_e_uns.json').automato;
-esperar('ε detectado como AFND', eps.tipo, 'AFND');
-['', '0', '1', '0011', '000', '111'].forEach((w) => esperar(`0*1* aceita "${w}"`, aceita(eps, w), true));
-['10', '0101', '110'].forEach((w) => esperar(`0*1* rejeita "${w}"`, aceita(eps, w), false));
-esperar('fecho-ε inicial inclui q1', A.simular(eps, '').passos[0].estados, ['q0', 'q1']);
+// ---------- Passos da simulação ----------
+const sim = A.simular(afd, '1001');
+esperar('1001 passa por r0 r1 r2 r1 r0', sim.passos.map((p) => p.estado), ['r0', 'r1', 'r2', 'r1', 'r0']);
+esperar('passo 1 usa a aresta r0 -1-> r1', sim.passos[1].aresta, { de: 'r0', simbolo: '1', para: 'r1' });
 
 // ---------- Robustez ----------
 esperar('arquivo vazio', A.lerJSON('').erros.length, 1);
@@ -47,6 +45,7 @@ esperar('não é objeto', A.validar([1, 2]).erros.length, 1);
 esperar('faltam campos', A.validar({}).erros.length > 0, true);
 const inv = carregar('invalido_estado_inexistente.json');
 esperar('arquivo inválido gera erros', inv.erros.length >= 3, true);
+esperar('destino em lista é recusado (AFND não é aceito)', A.validar({ estados: ['a', 'b'], alfabeto: ['0'], transicoes: { a: { 0: ['a', 'b'] } }, estadoInicial: 'a', estadosFinais: [] }).erros.length, 1);
 esperar('arquivo inválido não gera autômato', inv.automato, null);
 esperar('símbolo multi-caractere no alfabeto', A.validar({ estados: ['a'], alfabeto: ['ab'], transicoes: {}, estadoInicial: 'a', estadosFinais: [] }).erros.length > 0, true);
 esperar('estados repetidos', A.validar({ estados: ['a', 'a'], alfabeto: ['0'], transicoes: {}, estadoInicial: 'a', estadosFinais: [] }).erros.length > 0, true);

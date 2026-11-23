@@ -75,10 +75,10 @@
   // ---------------- exemplo de JSON + downloads ----------------
   const ex = window.EXEMPLOS || {};
   const nomes = Object.keys(ex);
-  const afnd = nomes.find((n) => ex[n].arquivo === 'afnd_termina_em_01.json');
-  if (afnd) $('json-exemplo').innerHTML = realcar(ex[afnd].json);
+  const exJson = nomes.find((n) => ex[n].arquivo === 'afd_multiplo_de_3.json');
+  if (exJson) $('json-exemplo').innerHTML = realcar(ex[exJson].json);
   const alvo = document.querySelector('[data-alvo="json-exemplo"]');
-  if (alvo && afnd) alvo.onclick = (ev) => copiar(ex[afnd].json, ev.currentTarget);
+  if (alvo && exJson) alvo.onclick = (ev) => copiar(ex[exJson].json, ev.currentTarget);
 
   const baixar = $('baixar');
   nomes.forEach((n) => {

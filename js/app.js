@@ -5,7 +5,7 @@
 (function () {
   const A = window.Automato;
   const NS = 'http://www.w3.org/2000/svg';
-  const R = 26; // raio dos estados
+  let R = 26; // raio dos estados (aumenta se o nome do estado for longo)
 
   const $ = (id) => document.getElementById(id);
   const el = (nome, attrs, pai) => {
@@ -78,6 +78,9 @@
 
   // ---------------- layout automático ----------------
   function calcularLayout() {
+    const maior = Math.max(...auto.estados.map((e) => [...e].length));
+    R = Math.max(26, Math.ceil(maior * 4.6) + 10);
+
     // profundidade por busca em largura a partir do estado inicial
     const prof = {};
     prof[auto.inicial] = 0;
@@ -102,7 +105,7 @@
     auto.estados.forEach((e) => (colunas[prof[e]] = (colunas[prof[e]] || []).concat(e)));
     const maxLinhas = Math.max(...Object.values(colunas).map((c) => c.length));
 
-    const dx = 170, dy = 120, margemX = 90, margemY = 90;
+    const dx = Math.max(170, 2 * R + 100), dy = Math.max(120, 2 * R + 40), margemX = 90, margemY = 90;
     const largura = Math.max(560, margemX * 2 + maxProf * dx);
     const altura = Math.max(300, margemY * 2 + (maxLinhas - 1) * dy);
     pos = {};
@@ -148,8 +151,7 @@
 
     const ativas = new Set();
     const p = resultado.passos[passo];
-    if (p && passo > 0) p.arestas.forEach((a) => ativas.add(a.de + '|' + a.simbolo + '|' + a.para));
-    if (p && passo === 0) p.arestas.forEach((a) => ativas.add(a.de + '|' + a.simbolo + '|' + a.para));
+    if (p && p.aresta) ativas.add(p.aresta.de + '|' + p.aresta.simbolo + '|' + p.aresta.para);
 
     // arestas
     grupos.forEach((g) => {
@@ -163,7 +165,7 @@
 
     // estados
     const ultimo = passo === resultado.passos.length - 1;
-    const ativosAgora = new Set(p ? p.estados : []);
+    const ativosAgora = new Set(p && p.estado ? [p.estado] : []);
     auto.estados.forEach((e) => {
       const { x, y } = pos[e];
       const final = auto.finais.includes(e);
@@ -256,7 +258,7 @@
       const tr = document.createElement('tr');
       if (i === passo) tr.className = 'atual';
       tr.innerHTML = `<td>${p.n}</td><td>${p.lido === null ? '—' : escapar(p.lido)}</td>` +
-        `<td>{${escapar(p.estados.join(', '))}}</td>`;
+        `<td>${p.estado ? escapar(p.estado) : '— (travou)'}</td>`;
       corpo.appendChild(tr);
     });
     corpo.parentElement.parentElement.scrollTop = 1e6;
@@ -292,18 +294,18 @@
       return;
     }
     d.innerHTML =
-      `<b>${escapar(auto.nome)}</b> <span class="selo">${auto.tipo}</span>` +
+      `<b>${escapar(auto.nome)}</b> <span class="selo">AFD</span>` +
       (auto.incompleto ? ' <span class="selo aviso" title="Se faltar transição, a palavra é rejeitada">AFD parcial</span>' : '') +
       `<br>Q = {${escapar(auto.estados.join(', '))}} &nbsp; Σ = {${escapar(auto.alfabeto.join(', '))}}` +
       `<br>q₀ = ${escapar(auto.inicial)} &nbsp; F = {${escapar(auto.finais.join(', '))}}`;
 
-    const cols = auto.alfabeto.concat(auto.temEps ? [A.EPS] : []);
+    const cols = auto.alfabeto;
     let h = '<thead><tr><th>δ</th>' + cols.map((c) => `<th>${escapar(c)}</th>`).join('') + '</tr></thead><tbody>';
     auto.estados.forEach((e) => {
       const marca = (e === auto.inicial ? '→' : '') + (auto.finais.includes(e) ? '*' : '');
       h += `<tr><th>${marca}${escapar(e)}</th>` + cols.map((c) => {
-        const dest = auto.delta[e][c] || [];
-        return `<td>${dest.length ? '{' + escapar(dest.join(', ')) + '}' : '—'}</td>`;
+        const dest = auto.delta[e][c];
+        return `<td>${dest ? escapar(dest) : '—'}</td>`;
       }).join('') + '</tr>';
     });
     t.innerHTML = h + '</tbody>';
