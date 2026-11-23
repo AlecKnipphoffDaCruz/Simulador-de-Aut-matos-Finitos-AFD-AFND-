@@ -365,12 +365,26 @@
   $('btn-voltar').onclick = () => irPara(passo - 1);
   $('btn-auto').onclick = alternarAuto;
   $('btn-reiniciar').onclick = iniciarSimulacao;
-  $('palavra').addEventListener('input', iniciarSimulacao);
+  // ---------------- binário <-> decimal ----------------
+  // Mostra o valor decimal da palavra (só quando ela é binária: só 0 e 1).
+  function sincronizarDecimal() {
+    const p = $('palavra').value;
+    $('decimal').value = /^[01]+$/.test(p) ? BigInt('0b' + p).toString() : '';
+  }
+  $('palavra').addEventListener('input', () => { sincronizarDecimal(); iniciarSimulacao(); });
+  // Digitou em decimal: converte para binário e simula essa palavra.
+  $('decimal').addEventListener('input', () => {
+    const d = $('decimal').value.replace(/\D/g, '');
+    $('decimal').value = d;
+    $('palavra').value = d === '' ? '' : BigInt(d).toString(2);
+    iniciarSimulacao();
+  });
   $('velocidade').onchange = () => { if (timer) { pararAuto(); alternarAuto(); } };
   seletor.onchange = () => {
     if (seletor.value && EXEMPLOS[seletor.value]) {
       $('json').value = EXEMPLOS[seletor.value].json;
       $('palavra').value = EXEMPLOS[seletor.value].palavra;
+      sincronizarDecimal();
       carregar();
     }
   };

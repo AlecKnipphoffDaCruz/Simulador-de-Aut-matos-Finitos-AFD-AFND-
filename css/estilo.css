@@ -42,6 +42,8 @@ input[type=text], select { font: inherit; padding: 7px 10px; border: 1px solid v
 .linha { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
 .linha label { font-size: 13px; color: var(--suave); }
 #palavra { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 18px; letter-spacing: 2px; width: 260px; }
+#decimal { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 18px; width: 120px; }
+.equivale { font-size: 18px; color: var(--suave); }
 /* fita */
 #fita { display: flex; gap: 4px; min-height: 48px; flex-wrap: wrap; margin: 4px 0 10px; }
 .celula { width: 40px; height: 44px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--borda); border-radius: 6px; font: 600 20px ui-monospace, Menlo, Consolas, monospace; background: #fff; }
