@@ -44,6 +44,15 @@ input[type=text], select { font: inherit; padding: 7px 10px; border: 1px solid v
 #palavra { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 18px; letter-spacing: 2px; width: 260px; }
 #decimal { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 18px; width: 120px; }
 .equivale { font-size: 18px; color: var(--suave); }
+#grupo-decimal:not([hidden]) { display: inline-flex; gap: 8px; align-items: center; }
+/* switch (liga/desliga) */
+.switch { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.switch .trilho { position: relative; width: 34px; height: 20px; border-radius: 10px; background: #cbd5e1; transition: background .2s; }
+.switch .trilho::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; }
+.switch input:checked + .trilho { background: var(--azul); }
+.switch input:checked + .trilho::after { transform: translateX(14px); }
+.switch input:focus-visible + .trilho { outline: 2px solid var(--azul); outline-offset: 2px; }
 /* fita */
 #fita { display: flex; gap: 4px; min-height: 48px; flex-wrap: wrap; margin: 4px 0 10px; }
 .celula { width: 40px; height: 44px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--borda); border-radius: 6px; font: 600 20px ui-monospace, Menlo, Consolas, monospace; background: #fff; }

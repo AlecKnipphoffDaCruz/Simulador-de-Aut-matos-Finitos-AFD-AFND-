@@ -35,9 +35,15 @@
       <div class="linha">
         <label for="palavra">Palavra de entrada:</label>
         <input type="text" id="palavra" value="" autocomplete="off" spellcheck="false" placeholder="ex.: 1001">
-        <span class="equivale">=</span>
-        <label for="decimal">Decimal:</label>
-        <input type="text" id="decimal" value="" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="ex.: 9" title="Digite um número decimal para convertê-lo em binário (ou digite a palavra binária para ver o valor decimal)">
+        <label class="switch" title="Mostra um campo decimal ligado à palavra binária (ex.: 9 ⇄ 1001)">
+          <input type="checkbox" id="mostrar-decimal">
+          <span class="trilho"></span>
+          Decimal
+        </label>
+        <span id="grupo-decimal" hidden>
+          <span class="equivale">=</span>
+          <input type="text" id="decimal" value="" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="ex.: 9" aria-label="Valor decimal" title="Digite um número decimal para convertê-lo em binário (ou digite a palavra binária para ver o valor decimal)">
+        </span>
       </div>
       <div id="fita"></div>
       <div class="controles">
@@ -63,8 +69,9 @@
       <div class="linha">
         <select id="exemplo" aria-label="Exemplos"></select>
         <input type="file" id="arquivo" accept=".json,.txt,application/json,text/plain">
+        <button id="btn-escrever" title="Coloca na caixa abaixo um modelo com todos os campos esperados, para você editar">✎ Escrever</button>
       </div>
-      <textarea id="json" spellcheck="false"></textarea>
+      <textarea id="json" spellcheck="false" aria-label="Especificação do autômato em JSON" placeholder="Escreva ou cole o JSON aqui, ou clique em ✎ Escrever para começar de um modelo."></textarea>
       <div class="linha" style="margin-top:8px"><button id="btn-carregar" class="primario">Carregar autômato</button></div>
       <div id="erros" hidden></div>
       <div class="dica">Em <code>transicoes</code>, cada símbolo leva a <b>um único</b> estado: <code>"r0": {"0": "r0", "1": "r1"}</code>.</div>

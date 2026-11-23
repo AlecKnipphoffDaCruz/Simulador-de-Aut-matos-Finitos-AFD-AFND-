@@ -372,6 +372,11 @@
     $('decimal').value = /^[01]+$/.test(p) ? BigInt('0b' + p).toString() : '';
   }
   $('palavra').addEventListener('input', () => { sincronizarDecimal(); iniciarSimulacao(); });
+  // Switch: mostra/esconde o campo decimal (a palavra pode ser texto qualquer).
+  $('mostrar-decimal').addEventListener('change', () => {
+    $('grupo-decimal').hidden = !$('mostrar-decimal').checked;
+    sincronizarDecimal();
+  });
   // Digitou em decimal: converte para binário e simula essa palavra.
   $('decimal').addEventListener('input', () => {
     const d = $('decimal').value.replace(/\D/g, '');
@@ -387,6 +392,26 @@
       sincronizarDecimal();
       carregar();
     }
+  };
+  // ---------------- escrever do zero ----------------
+  // Modelo com todos os campos que o validador espera; já é um AFD válido.
+  const MODELO = `{
+  "nome": "Meu AFD",
+  "estados": ["q0", "q1"],
+  "alfabeto": ["0", "1"],
+  "transicoes": {
+    "q0": { "0": "q0", "1": "q1" },
+    "q1": { "0": "q1", "1": "q0" }
+  },
+  "estadoInicial": "q0",
+  "estadosFinais": ["q1"]
+}`;
+  $('btn-escrever').onclick = () => {
+    $('json').value = MODELO;
+    seletor.value = '';
+    $('arquivo').value = '';
+    carregar();
+    $('json').focus();
   };
   $('arquivo').onchange = (ev) => {
     const f = ev.target.files[0];
