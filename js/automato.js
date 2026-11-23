@@ -74,28 +74,33 @@
     const delta = {};
     estados.forEach((e) => (delta[e] = {}));
 
-    Object.keys(transicoes).forEach((origem) => {
+    Object.keys(transicoes).forEach((origem) => { // para cada estado de origem do JSON
+      // a origem precisa ser um estado declarado
       if (!conjuntoEstados.has(origem)) {
         erros.push(`Transição sai de "${origem}", que não existe em "estados".`);
-        return;
+        return; // pula para a próxima origem
       }
-      const porSimbolo = transicoes[origem];
+      const porSimbolo = transicoes[origem]; // ex.: { "0": "q0", "1": "q1" }
+      // as transições da origem têm que ser um objeto { símbolo: destino }
       if (porSimbolo === null || typeof porSimbolo !== 'object' || Array.isArray(porSimbolo)) {
         erros.push(`As transições de "${origem}" devem ser um objeto { símbolo: destino }.`);
         return;
       }
-      Object.keys(porSimbolo).forEach((simbolo) => {
+      Object.keys(porSimbolo).forEach((simbolo) => { // para cada símbolo dessa origem
+        // o símbolo tem que pertencer ao alfabeto
         if (!alfabeto.includes(simbolo)) {
           erros.push(`Transição de "${origem}" usa o símbolo "${simbolo}", que não está no alfabeto.`);
           return;
         }
-        const destino = porSimbolo[simbolo];
+        const destino = porSimbolo[simbolo]; // estado para onde a transição leva
+        // AFD: o destino é UM único estado (texto), não uma lista
         if (!ehTexto(destino)) {
           erros.push(`Transição ("${origem}", "${simbolo}") deve ter um único destino (um texto), mas recebeu ${JSON.stringify(destino)}.`);
+        // o destino também precisa ser um estado declarado
         } else if (!conjuntoEstados.has(destino)) {
           erros.push(`Transição ("${origem}", "${simbolo}") vai para "${destino}", que não existe em "estados".`);
         } else {
-          delta[origem][simbolo] = destino;
+          delta[origem][simbolo] = destino; // tudo certo: grava δ(origem, símbolo) = destino
         }
       });
     });
@@ -139,14 +144,16 @@
    *   aresta = transição usada neste passo (para destacar no desenho)
    */
   function simular(auto, palavra) {
-    const simbolos = [...palavra];
-    let estado = auto.inicial;
+    const simbolos = [...palavra]; // quebra a palavra em símbolos: "1001" -> ["1","0","0","1"]
+    let estado = auto.inicial; // a máquina começa no estado inicial
+    // passo 0: nada lido ainda, só o estado inicial
     const passos = [
       { n: 0, lido: null, estado, aresta: null, texto: `Início em ${estado}` },
     ];
 
-    for (let i = 0; i < simbolos.length; i++) {
-      const c = simbolos[i];
+    for (let i = 0; i < simbolos.length; i++) { // lê um símbolo por vez, da esquerda p/ direita
+      const c = simbolos[i]; // símbolo atual
+      // símbolo fora do alfabeto: rejeita na hora
       if (!auto.alfabeto.includes(c)) {
         return {
           aceita: false,
@@ -155,7 +162,8 @@
           passos,
         };
       }
-      const proximo = auto.delta[estado][c];
+      const proximo = auto.delta[estado][c]; // consulta a tabela: δ(estado atual, símbolo)
+      // não existe transição para esse símbolo: a máquina trava e rejeita
       if (proximo === undefined) {
         passos.push({ n: i + 1, lido: c, estado: null, aresta: null, texto: `Leu "${c}" em ${estado}: não existe transição` });
         return {
@@ -164,6 +172,7 @@
           passos,
         };
       }
+      // registra o passo (a tela usa isso para animar o caminho)
       passos.push({
         n: i + 1,
         lido: c,
@@ -171,9 +180,10 @@
         aresta: { de: estado, simbolo: c, para: proximo },
         texto: `Leu "${c}": ${estado} → ${proximo}`,
       });
-      estado = proximo;
+      estado = proximo; // anda para o próximo estado
     }
 
+    // leu tudo: aceita se parou em um estado final
     const aceita = auto.finais.includes(estado);
     return {
       aceita,
